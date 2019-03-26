@@ -7,4 +7,6 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
     <string name="userUrl">Khishigbayar.u</string>
+    <string name="facebook_app_id">1015841451939099</string>
+    <string name="fb_login_protocol_scheme">fb1015841451939099</string>
 </resources>
