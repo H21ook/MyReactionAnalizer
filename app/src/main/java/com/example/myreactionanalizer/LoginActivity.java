@@ -1,31 +1,40 @@
 package com.example.myreactionanalizer;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.login.LoginManager;
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.example.myreactionanalizer.MainActivity;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.Arrays;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private CallbackManager callbackManager;
-    private LoginButton loginButton;
     private static final String EMAIL = "email";
+    private static final String PUBLIC_PROFILE = "public_profile";
+    private static final String USER_AGE_RANGE = "user_age_range";
+    private static final String USER_LINK = "user_link";
+    private static final String USER_PHOTOS = "user_photos";
+    private static final String USER_POSTS = "user_posts";
+    private static final String USER_FRIENDS = "user_friends";
+    private static final String USER_HOMETOWN = "user_hometown";
+    private static final String USER_LIKES = "user_hometown";
+    private static final String USER_GENDER = "user_gender";
+    private static final String USER_STATUS = "user_status";
+    private static final String USER_VIDEOS = "user_videos";
+
+    private CallbackManager callbackManager;
+    private AccessTokenTracker accessTokenTracker;
+    private ProfileTracker profileTracker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,68 +42,78 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         callbackManager = CallbackManager.Factory.create();
+        accessTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(AccessToken oldToken, AccessToken newToken) {
+            }
+        };
 
-        loginButton = (LoginButton) findViewById(R.id.login_button);
-        loginButton.setReadPermissions(Arrays.asList("email", "public_profile"));
-        // If you are using in a fragment, call loginButton.setFragment(this);
+        profileTracker = new ProfileTracker() {
+            @Override
+            protected void onCurrentProfileChanged(Profile oldProfile, Profile newProfile) {
+                nextActivity(newProfile);
+            }
+        };
 
-        // Callback registration
-        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+        accessTokenTracker.startTracking();
+        profileTracker.startTracking();
+
+        LoginButton loginButton = (LoginButton)findViewById(R.id.login_button);
+        FacebookCallback<LoginResult> callback = new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                AccessToken accessToken = loginResult.getAccessToken();
-                useLoginInformation(accessToken);
+                Profile profile = Profile.getCurrentProfile();
+                nextActivity(profile);
+                Toast.makeText(getApplicationContext(), "Logging in...", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onCancel() {
-                // App code
             }
 
             @Override
-            public void onError(FacebookException exception) {
-                // App code
-                Log.i("ERROR", exception.getMessage());
+            public void onError(FacebookException e) {
             }
-        });
+        };
+        loginButton.setReadPermissions(Arrays.asList(EMAIL, PUBLIC_PROFILE, USER_AGE_RANGE, USER_LINK,
+                USER_PHOTOS,USER_FRIENDS, USER_POSTS, USER_HOMETOWN, USER_LIKES, USER_GENDER, USER_STATUS, USER_VIDEOS));
+        loginButton.registerCallback(callbackManager, callback);
     }
 
-    private void useLoginInformation(AccessToken accessToken) {
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-//        GraphRequest request = GraphRequest.newMeRequest(accessToken, new GraphRequest.GraphJSONObjectCallback() {
-//
-//            @Override
-//            public void onCompleted(JSONObject object, GraphResponse response) {
-//                Bundle bundle = new Bundle();
-//                try {
-//                    String name = object.getString("name");
-//                    String email = object.getString("email");
-//                    String image = object.getJSONObject("picture").getJSONObject("data").getString("url");
-//                    bundle.putString("userName", name);
-//                    bundle.putString("userEmail", email);
-//                    bundle.putString("userImg", image);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-//                intent.putExtras(bundle);
-//                intent.putExtra("jsondata", object.toString());
-//                startActivity(intent);
-//                finish();
-//            }
-//        });
-//
-//        Bundle parameters = new Bundle();
-//        parameters.putString("fields", "id, name, email, picture.width(200)");
-//        request.setParameters(parameters);
-//        request.executeAsync();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //Facebook login
+        Profile profile = Profile.getCurrentProfile();
+        nextActivity(profile);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    protected void onStop() {
+        super.onStop();
+        //Facebook login
+        accessTokenTracker.stopTracking();
+        profileTracker.stopTracking();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         callbackManager.onActivityResult(requestCode, resultCode, data);
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void nextActivity(Profile profile){
+        if(profile != null){
+            Intent main = new Intent(LoginActivity.this, MainActivity.class);
+            main.putExtra("userFirstName", profile.getFirstName());
+            main.putExtra("userLastName", profile.getLastName());
+            main.putExtra("userID", profile.getId());
+            main.putExtra("userImg", profile.getProfilePictureUri(200,200).toString());
+            startActivity(main);
+        }
     }
 }
