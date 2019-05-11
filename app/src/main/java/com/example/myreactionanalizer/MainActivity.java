@@ -3,15 +3,18 @@ package com.example.myreactionanalizer;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -91,7 +94,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     reaction.put("sad", jArraySad.getJSONObject(i).getJSONObject("reactions").getJSONObject("summary").getString("total_count"));
                                     reaction.put("angry", jArrayAngry.getJSONObject(i).getJSONObject("reactions").getJSONObject("summary").getString("total_count"));
                                     reaction.put("love", jArrayLove.getJSONObject(i).getJSONObject("reactions").getJSONObject("summary").getString("total_count"));
-                                    Log.d("REACTION: ", reaction.toString());
                                     reactions.add(reaction);
                                     listContent.add(new JSONObject(jArrayLike.getString(i)));
                                 }
@@ -99,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 listView.setDividerHeight(50);
                                 postCustomAdapter.setContent(listContent);
                                 postCustomAdapter.setCharData(reactions);
+                                Log.d("REACTION: ", listContent.size() + "");
+                                Log.d("REACTION: ", reactions.size() + "");
                                 listView.setAdapter(postCustomAdapter);
                             }
                         } catch (JSONException e) {
