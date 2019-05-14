@@ -12,6 +12,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -32,9 +34,10 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    ArrayList<JSONObject> listContent = new ArrayList<>();
-    ArrayList<JSONObject> reactions = new ArrayList<>();
-    CustomAdapter postCustomAdapter = new CustomAdapter(this);
+    private ArrayList<JSONObject> listContent = new ArrayList<>();
+    private ArrayList<JSONObject> reactions = new ArrayList<>();
+    private CustomAdapter postCustomAdapter = new CustomAdapter(this);
+    private WebAppInterface webAppInterface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +69,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .load(bundle.getString("userImg"))
                 .into(userImg);
 
+        //WebAppInterface
+        WebView webView = (WebView)findViewById(R.id.webview);
+        webView.loadUrl("file:///android_asset/index.html");
+        webAppInterface =  new WebAppInterface(MainActivity.this);
+        webView.addJavascriptInterface(webAppInterface, "AndroidInterface");
+
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+
+        webView.setWebViewClient(new CustomWebViewClient());
+        webView.setWebChromeClient(new CustomWebChromeClient());
+        //WebAppInterface
+
         //Friends data
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
 
@@ -95,11 +111,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     reactions.add(reaction);
                                     listContent.add(new JSONObject(jArrayLike.getString(i)));
                                 }
-                                ListView listView = (ListView) findViewById(R.id.postList);
-                                listView.setDividerHeight(50);
-                                postCustomAdapter.setContent(listContent);
-                                postCustomAdapter.setCharData(reactions);
-                                listView.setAdapter(postCustomAdapter);
+                                webAppInterface.setPostData(listContent);
+
+//                                ListView listView = (ListView) findViewById(R.id.postList);
+//                                listView.setDividerHeight(50);
+//                                postCustomAdapter.setContent(listContent);
+//                                postCustomAdapter.setCharData(reactions);
+//                                listView.setAdapter(postCustomAdapter);
+
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
