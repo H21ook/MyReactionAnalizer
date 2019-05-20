@@ -1,5 +1,7 @@
 var posts = [];
 var charts = [];
+var chartsObj = [];
+
 function showAndroidToast(toast) {
     AndroidInterface.showToast(toast);
 }
@@ -12,12 +14,13 @@ function displayPosts() {
 
 function addPost(post,chartData, index) {
     var node = document.createElement("div");
-    var element = "";
 
+    var element = "";
+    
     element = 
     '<div class="card">'+
         '<div class="card-body">' +
-            '<div id="post'+index+'"';
+            '<div id="post'+index+'">';
     if(post.message) {
         element += '<p>' + post.message + '</p>';
     }
@@ -37,15 +40,23 @@ function addPost(post,chartData, index) {
         element += '<p style="padding-top: 0px;">' + post.description + '</p>';
     }
     
-    element += '<div id="chart' + index + '" class="chart-wrap"></div>';
     element += 
-    '<div id="postControl">' +
-        '<button id="flip-btn'+ index +'" class="control-btn" onclick="postHide('+index+','+ false +')">' +
-        '</button>' +
-    '</div>';
+            '</div>';
 
     element += 
-            '</div>' +
+            '<div id="chart' + index + '" class="chart-wrap"></div>';
+
+    element += 
+            '<div id="postControl">' +
+                '<a id="flip-btn'+ index +'" class="ripple control-btn" onclick="postHide('+index+')">' +
+                    '<i class="fas fa-exchange-alt"></i>' +
+                '</a>' +
+                '<a class="ripple control-btn" onclick="getChartImage('+index+')">' +
+                    '<i class="fas fa-download"></i>' +
+                '</a>' +
+            '</div>';
+
+    element += 
         '</div>' +
     '</div>';
 
@@ -54,8 +65,10 @@ function addPost(post,chartData, index) {
     document.getElementById("container").appendChild(node);
     
     //charts data
-    prepareChart(chartData, index);
-    postHide(index, true);
+    var postChart = prepareChart(chartData, index);
+    
+    chartsObj.push(postChart);
+    postHide(index);
 }
 
 function prepareChart(chartData, index) {
@@ -273,6 +286,7 @@ function prepareChart(chartData, index) {
         
     };
     myChart.setOption(option);
+    return myChart;
 }
 
 function getPostData() {
@@ -312,41 +326,28 @@ function loadData(){
 }
 
 //JQUERY
-function postHide(i, auto) {
-    //  = $(".post-wrap").html();
-    if(auto) {
-        if($('#chart'+i)[0].style.display == "none") {
-            $('#post'+i).hide('blind', 500);
-            setTimeout(function() {
-                $('#chart'+i).show('blind', 500);
-            }, 500);
-        } else {
-            $("#flip-btn" + i).append("<i id='toggleBtn"+i+"' class='fa fa-bar-chart'></i>");
-            $('#chart'+i).hide('blind', 500);
-            setTimeout(function() {
-                $('#post'+i).show('blind', 500);
-            }, 500);
-        }
-    } else {
-        if($('#chart'+i)[0].style.display == "none") {
-            $("#toggleBtn"+i).remove();
-            $("#flip-btn" + i).append("<i id='toggleBtn"+i+"' class='fa fa-newspaper-o'></i>");
-            $('#post'+i).hide('blind', 500);
-            setTimeout(function() {
-                $('#chart'+i).show('blind', 500);
-            }, 500);
-        } else {
-            $("#toggleBtn"+i).remove();
-            $("#flip-btn" + i).append("<i id='toggleBtn"+i+"' class='fa fa-bar-chart'></i>");
-            $('#chart'+i).hide('blind', 500);
-            setTimeout(function() {
-                $('#post'+i).show('blind', 500);
-            }, 500);
-        }
-    }
+function postHide(i) {
     
-    // $("#demo").hide('slide', 1000);
+    if($('#chart'+i)[0].style.display == "none") {
+        $('#post'+i).hide('blind', 500);
+        setTimeout(function() {
+            $('#chart'+i).show('blind', 500);
+        }, 500);
+    } else {
+        $('#chart'+i).hide('blind', 500);
+        setTimeout(function() {
+            $('#post'+i).show('blind', 500);
+        }, 500);
+    }
 }
+
+function getChartImage(i) {
+    try {
+        // AndroidInterface.showToast(chartsObj[0].getDataURL());
+    } catch(err) {
+        AndroidInterface.showToast(err.message);
+    }
+} 
 // $(document).ready(function(){
 //     $( "#demo" ).html( "<span class='red'>Hello <b>Again</b></span>" );
     // $("p").click(function(){

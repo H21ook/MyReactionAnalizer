@@ -23,12 +23,30 @@
     width: 500px;
 }
 
-#control-btn {
+.ripple {
+    background-position: center;
+    transition: background 0.8s;
+}
+
+.ripple:active {
+    background-color: #eeeeee;
+    background-size: 100%;
+    transition: background 0s;
+}
+
+/* Button style */
+.control-btn {
     border: none;
-    color: #EEEEEE;
+    border-radius: 50%;
     padding: 6px 8px;
     font-size: 16px;
+    text-decoration: none;
+    text-transform: uppercase;
     cursor: pointer;
+    color: white;
+    background-color: #ffffff;
+    outline: none;
+    margin: 0 5px;
 }
 #postControl {
     text-align: center;
