@@ -14,7 +14,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -112,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     listContent.add(new JSONObject(jArrayLike.getString(i)));
                                 }
                                 webAppInterface.setPostData(listContent);
+                                webAppInterface.setChartData(reactions);
 
 //                                ListView listView = (ListView) findViewById(R.id.postList);
 //                                listView.setDividerHeight(50);
@@ -126,12 +126,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 });
         Bundle parameters = new Bundle();
-        parameters.putString("fields", "posts.as(like){description,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LIKE).limit(0).summary(true)}," +
-                "posts.as(love){description,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LOVE).limit(0).summary(true)}," +
-                "posts.as(wow){description,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(WOW).limit(0).summary(true)}," +
-                "posts.as(haha){description,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(HAHA).limit(0).summary(true)}," +
-                "posts.as(sad){description,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(SAD).limit(0).summary(true)}," +
-                "posts.as(angry){description,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(ANGRY).limit(0).summary(true)}");
+        parameters.putString("fields", "posts.as(like){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LIKE).limit(0).summary(true)}," +
+                "posts.as(love){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LOVE).limit(0).summary(true)}," +
+                "posts.as(wow){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(WOW).limit(0).summary(true)}," +
+                "posts.as(haha){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(HAHA).limit(0).summary(true)}," +
+                "posts.as(sad){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(SAD).limit(0).summary(true)}," +
+                "posts.as(angry){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(ANGRY).limit(0).summary(true)}");
         request.setParameters(parameters);
         request.executeAsync();
     }

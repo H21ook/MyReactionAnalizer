@@ -1,50 +1,294 @@
 var posts = [];
-
+var charts = [];
 function showAndroidToast(toast) {
     AndroidInterface.showToast(toast);
 }
 
 function displayPosts() {
     for(var i = 0; i < posts.length; i++) {
-        addPost(posts[i]);
+        addPost(posts[i],charts[i],i);
     }
 }
 
-function addPost(post) {
+function addPost(post,chartData, index) {
     var node = document.createElement("div");
     var element = "";
-    var video = {
-        is: false,
-        url: ""
-    };
+
     element = 
-    '<div class="card" id="card" onclick="myClick(event)">'+
-        '<div class="card-body">';
+    '<div class="card">'+
+        '<div class="card-body">' +
+            '<div id="post'+index+'"';
     if(post.message) {
         element += '<p>' + post.message + '</p>';
     }
-    if(post.full_picture) {
-            element +='<img class="card-img-top" src="' + post.full_picture + '" alt="Card image cap">';
+    if(post.type) {
+        if(post.type == 'video') {
+            element +='<div class="fb-video" data-href="' + post.permalink_url + '" data-allowfullscreen="true" data-width="500"></div>';
+        } else {
+            if(post.full_picture) {
+                element +='<img class="card-img-top" src="' + post.full_picture + '" alt="Card image cap">';
+            }
+        }
     }
     if(post.name) {
-        element += '<h5>' + post.name + '</h5>';
+        element += '<h5 style="padding-top: 10px;">' + post.name + '</h5>';
     }
     if(post.description) {
-        element += '<p>' + post.description + '</p>';
+        element += '<p style="padding-top: 0px;">' + post.description + '</p>';
     }
     
+    element += '<div id="chart' + index + '" class="chart-wrap"></div>';
     element += 
+    '<div id="postControl">' +
+        '<button id="flip-btn'+ index +'" class="control-btn" onclick="postHide('+index+','+ false +')">' +
+        '</button>' +
+    '</div>';
+
+    element += 
+            '</div>' +
         '</div>' +
     '</div>';
+
     node.innerHTML = element;
+    node.classList.add("post-wrap");
     document.getElementById("container").appendChild(node);
+    
+    //charts data
+    prepareChart(chartData, index);
+    postHide(index, true);
+}
+
+function prepareChart(chartData, index) {
+    var myChart = echarts.init(document.getElementById('chart' + index));
+    var reactionIcons = {
+        'Like': 'icons/like.png',
+        'Sad': 'icons/sad.png',
+        'Love': 'icons/love.png',
+        'Angry': 'icons/angry.png',
+        'Haha': 'icons/haha.png',
+        'Wow': 'icons/wow.png'
+    };
+    var option = {
+        xAxis: {
+            type: 'category',
+            data: ['Reactions'],
+            axisLabel: {
+                formatter: function (value) {
+                    return '{' + value + '| }\n{value|' + value + '}';
+                },
+                margin: 0,
+                rich: {
+                    value: {
+                        lineHeight: 0,
+                        align: 'center'
+                    }
+                }
+            }
+        },
+        tooltip: {},
+        yAxis: {
+            type: 'value'
+        },
+        color: ['#24A4EA', '#EC4964', '#FFE96F', '#662D10', '#24A4EA', '#ED6B0F'],
+        series: [
+            {
+                name: 'Like',
+                data: [{name: 'Like', value: parseInt(chartData.like)}],
+                type: 'bar',
+                label: {
+                    normal: {
+                        show:true,
+                        color: '#000000',
+                        position: 'top',
+                        formatter: function (value) {
+                            return '{' + value.name + '| }\n{value|' + value.value + '}';
+                        },
+                        rich: {
+                            value: {
+                                lineHeight: 20,
+                                align: 'center',
+                                color: '#000'
+                            },
+                            Like: {
+                                height: 20,
+                                backgroundColor: {
+                                    image: reactionIcons.Like
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                name: 'Love',
+                data: [{name: 'Love', value: parseInt(chartData.love)}],
+                type: 'bar',
+                label: {
+                    normal: {
+                        show:true,
+                        color: '#000000',
+                        position: 'top',
+                    
+                        formatter: function (value) {
+                            return '{' + value.name + '| }\n{value|' + value.value + '}';
+                        },
+                        rich: {
+                            value: {
+                                lineHeight: 20,
+                                align: 'center',
+                                color: '#000'
+                            },
+                            Love: {
+                                height: 20,
+                                align: 'center',
+                                backgroundColor: {
+                                    image: reactionIcons.Love
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                name: 'Wow',
+                data: [{name: 'Wow', value: parseInt(chartData.wow)}],
+                type: 'bar',
+                label: {
+                    normal: {
+                        show:true,
+                        color: '#000000',
+                        position: 'top',
+                    
+                        formatter: function (value) {
+                            return '{' + value.name + '| }\n{value|' + value.value + '}';
+                        },
+                        rich: {
+                            value: {
+                                lineHeight: 20,
+                                align: 'center',
+                                color: '#000'
+                            },
+                            Wow: {
+                                height: 20,
+                                align: 'center',
+                                backgroundColor: {
+                                    image: reactionIcons.Wow
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                name: 'Haha',
+                data: [{name: 'Haha', value: parseInt(chartData.haha)}],
+                type: 'bar',
+                label: {
+                    normal: {
+                        show:true,
+                        color: '#000000',
+                        position: 'top',
+                    
+                        formatter: function (value) {
+                            return '{' + value.name + '| }\n{value|' + value.value + '}';
+                        },
+                        rich: {
+                            value: {
+                                lineHeight: 20,
+                                align: 'center',
+                                color: '#000'
+                            },
+                            Haha: {
+                                height: 20,
+                                align: 'center',
+                                backgroundColor: {
+                                    image: reactionIcons.Haha
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                name: 'Sad',
+                data: [{name: 'Sad', value: parseInt(chartData.sad)}],
+                type: 'bar',
+                label: {
+                    normal: {
+                        show:true,
+                        color: '#000000',
+                        position: 'top',
+                    
+                        formatter: function (value) {
+                            return '{' + value.name + '| }\n{value|' + value.value + '}';
+                        },
+                        rich: {
+                            value: {
+                                lineHeight: 20,
+                                align: 'center',
+                                color: '#000'
+                            },
+                            Sad: {
+                                height: 20,
+                                align: 'center',
+                                backgroundColor: {
+                                    image: reactionIcons.Sad
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                name: 'Angry',
+                data: [{name: 'Angry', value: parseInt(chartData.angry)}],
+                type: 'bar',
+                label: {
+                    normal: {
+                        show:true,
+                        color: '#000000',
+                        position: 'top',
+                    
+                        formatter: function (value) {
+                            return '{' + value.name + '| }\n{value|' + value.value + '}';
+                        },
+                        rich: {
+                            value: {
+                                lineHeight: 20,
+                                align: 'center',
+                                color: '#000'
+                            },
+                            Angry: {
+                                height: 20,
+                                align: 'center',
+                                backgroundColor: {
+                                    image: reactionIcons.Angry
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        
+    };
+    myChart.setOption(option);
 }
 
 function getPostData() {
     var data;
     try {
         data = AndroidInterface.getPostData();
-        AndroidInterface.showToast(data.substring(0,  20));
+    } catch(err) {
+        AndroidInterface.showToast(err.message);
+    }
+    return JSON.parse(data);
+}
+
+function getChartData() {
+    var data;
+    try {
+        data = AndroidInterface.getChartData();
     } catch(err) {
         AndroidInterface.showToast(err.message);
     }
@@ -58,6 +302,7 @@ function loadData(){
             check = AndroidInterface.checkLoadedData();
             if(check) {
                 posts = getPostData();
+                charts = getChartData();
                 displayPosts();
             }
         } catch(err) {
@@ -67,15 +312,75 @@ function loadData(){
 }
 
 //JQUERY
-$(document).ready(function() {
-$('#child1').hide();
-});
-$("#mybutton").click(function(){
+function postHide(i, auto) {
+    //  = $(".post-wrap").html();
+    if(auto) {
+        if($('#chart'+i)[0].style.display == "none") {
+            $('#post'+i).hide('blind', 500);
+            setTimeout(function() {
+                $('#chart'+i).show('blind', 500);
+            }, 500);
+        } else {
+            $("#flip-btn" + i).append("<i id='toggleBtn"+i+"' class='fa fa-bar-chart'></i>");
+            $('#chart'+i).hide('blind', 500);
+            setTimeout(function() {
+                $('#post'+i).show('blind', 500);
+            }, 500);
+        }
+    } else {
+        if($('#chart'+i)[0].style.display == "none") {
+            $("#toggleBtn"+i).remove();
+            $("#flip-btn" + i).append("<i id='toggleBtn"+i+"' class='fa fa-newspaper-o'></i>");
+            $('#post'+i).hide('blind', 500);
+            setTimeout(function() {
+                $('#chart'+i).show('blind', 500);
+            }, 500);
+        } else {
+            $("#toggleBtn"+i).remove();
+            $("#flip-btn" + i).append("<i id='toggleBtn"+i+"' class='fa fa-bar-chart'></i>");
+            $('#chart'+i).hide('blind', 500);
+            setTimeout(function() {
+                $('#post'+i).show('blind', 500);
+            }, 500);
+        }
+    }
+    
+    // $("#demo").hide('slide', 1000);
+}
+// $(document).ready(function(){
+//     $( "#demo" ).html( "<span class='red'>Hello <b>Again</b></span>" );
+    // $("p").click(function(){
+    //     alert("The paragraph was clicked.");
+    // });
+// });
 
-$('#child').hide(1000, function(){
-    $('#parent2').append($('#child1'));
-    $('#child1').show(1000);
-});
+    // $("#demo").click(function(){
+    //     AndroidInterface.showToast("OK");
+        // alert(JSON.stringify($(this)[0]));
+        // document.getElementById("demo").innerHTML = JSON.stringify($(this)[0]);
+        // document.getElementById("demo").innerHTML = JSON.stringify($(this)[0].children);
+        // document.getElementById("demo").innerHTML = JSON.stringify($(this)[0].children[0]);
+        // if($(this)[0].children[0].id.substring(0,4) == "card") {
+        //     if($(this)[0].children[0].style.display == "none") {
+        //         $("#"+$(this)[0].children[0].id).show(1000);
+        //         $("#"+$(this)[0].children[1].id).hide(1000);
+        //     } else {
+        //         $("#"+$(this)[0].children[0].className).hide(1000);
+        //         $("#"+$(this)[0].children[1].className).show(1000);
+        //     }
+        // }
+    // });
 
-});
+
+// $(document).ready(function() {
+// $('#child1').hide();
+// });
+// $("#mybutton").click(function(){
+
+// $('#child').hide(1000, function(){
+//     $('#parent2').append($('#child1'));
+//     $('#child1').show(1000);
+// });
+
+// });
 //JQUERY

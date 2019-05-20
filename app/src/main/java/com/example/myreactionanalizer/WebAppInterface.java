@@ -1,6 +1,7 @@
 package com.example.myreactionanalizer;
 
 import android.content.Context;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
@@ -16,8 +17,10 @@ public class WebAppInterface {
 
     @JavascriptInterface
     public int checkLoadedData() {
-        if(this.postData != null && this.postData.size() > 0)
+        if(this.postData != null && this.postData.size() > 0 && this.chartData != null && this.chartData.size() > 0) {
+            Log.d("CHART", chartData.get(1).toString());
             return 1;
+        }
         else
             return 0;
     }
@@ -39,12 +42,22 @@ public class WebAppInterface {
 
     public void setPostData(ArrayList<JSONObject> content) {
         this.postData = content;
-        Toast.makeText(mContext, "ready", Toast.LENGTH_SHORT).show();
     }
 
     @JavascriptInterface
-    public ArrayList<JSONObject> getChartData() {
-        return chartData;
+    public String getChartData() {
+
+        String result = "[";
+        for(int i = 0; i <chartData.size(); i++) {
+
+            if(chartData.size() - 1 == i)
+                result += chartData.get(i).toString();
+            else
+                result += chartData.get(i).toString() + ",";
+
+        }
+        result += "]";
+        return result;
     }
 
     public void setChartData(ArrayList<JSONObject> chartData) {
@@ -59,6 +72,11 @@ public class WebAppInterface {
     @JavascriptInterface
     public void showToast(String toast) {
         Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
+    }
+
+    @JavascriptInterface
+    public String getFbId() {
+        return mContext.getResources().getString(R.string.facebook_app_id);
     }
 
 }
