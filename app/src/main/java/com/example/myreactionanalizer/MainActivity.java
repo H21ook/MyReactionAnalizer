@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -27,6 +28,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -38,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private CustomAdapter postCustomAdapter = new CustomAdapter(this);
     private WebAppInterface webAppInterface;
     private DatabaseController dbCtrl;
+    private  android.text.format.DateFormat df;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +73,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .load(bundle.getString("userImg"))
                 .into(userImg);
 
+        Button refreshBtn = (Button) findViewById(R.id.refBtn);
+        refreshBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                refresh();
+            }
+        });
         //WebAppInterface
         WebView webView = (WebView)findViewById(R.id.webview);
         webView.loadUrl("file:///android_asset/index.html");
@@ -83,8 +94,58 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //WebAppInterface
 
         dbCtrl = new DatabaseController(MainActivity.this);
-        dbCtrl.readPosts();
 
+        df = new android.text.format.DateFormat();
+        dbCtrl.readPosts(String.valueOf(df.format("yyyy-MM-dd", new Date())));
+
+        refresh();
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        int id = item.getItemId();
+//
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.nav_logout) {
+            LoginManager.getInstance().logOut();
+            Intent login = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(login);
+            finish();
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    public void refresh() {
         //Friends data
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
 
@@ -110,14 +171,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     reaction.put("sad", jArraySad.getJSONObject(i).getJSONObject("reactions").getJSONObject("summary").getString("total_count"));
                                     reaction.put("angry", jArrayAngry.getJSONObject(i).getJSONObject("reactions").getJSONObject("summary").getString("total_count"));
                                     reaction.put("love", jArrayLove.getJSONObject(i).getJSONObject("reactions").getJSONObject("summary").getString("total_count"));
-                                    Log.d("REACTION: ", reaction.toString());
+
                                     reactions.add(reaction);
                                     listContent.add(new JSONObject(jArrayLike.getString(i)));
                                 }
                                 webAppInterface.setPostData(listContent);
                                 webAppInterface.setChartData(reactions);
 
-                                dbCtrl.addPosts(listContent,reactions);
+                                dbCtrl.addAndUpdatePosts(listContent,reactions);
 
 //                                ListView listView = (ListView) findViewById(R.id.postList);
 //                                listView.setDividerHeight(50);
@@ -132,67 +193,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 });
         Bundle parameters = new Bundle();
-        parameters.putString("fields", "posts.as(like){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LIKE).limit(0).summary(true)}," +
-                "posts.as(love){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LOVE).limit(0).summary(true)}," +
-                "posts.as(wow){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(WOW).limit(0).summary(true)}," +
-                "posts.as(haha){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(HAHA).limit(0).summary(true)}," +
-                "posts.as(sad){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(SAD).limit(0).summary(true)}," +
-                "posts.as(angry){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(ANGRY).limit(0).summary(true)}");
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.DATE, -30);
+        String tTime = cal.get(Calendar.YEAR)+ "-" + cal.get(Calendar.YEAR) + ""s
+
+        parameters.putString("fields", "posts.as(like).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LIKE).limit(0).summary(true)}," +
+                "posts.as(love).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LOVE).limit(0).summary(true)}," +
+                "posts.as(wow).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(WOW).limit(0).summary(true)}," +
+                "posts.as(haha).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(HAHA).limit(0).summary(true)}," +
+                "posts.as(sad).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(SAD).limit(0).summary(true)}," +
+                "posts.as(angry).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(ANGRY).limit(0).summary(true)}");
         request.setParameters(parameters);
         request.executeAsync();
-    }
-
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.nav_camera) {
-
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_logout) {
-            LoginManager.getInstance().logOut();
-            Intent login = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(login);
-            finish();
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
 }
