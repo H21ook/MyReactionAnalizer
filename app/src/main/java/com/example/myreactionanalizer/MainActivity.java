@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ArrayList<JSONObject> reactions = new ArrayList<>();
     private CustomAdapter postCustomAdapter = new CustomAdapter(this);
     private WebAppInterface webAppInterface;
+    private DatabaseController dbCtrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +82,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webView.setWebChromeClient(new CustomWebChromeClient());
         //WebAppInterface
 
+        dbCtrl = new DatabaseController(MainActivity.this);
+        dbCtrl.readPosts();
+
         //Friends data
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
 
@@ -112,6 +116,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
                                 webAppInterface.setPostData(listContent);
                                 webAppInterface.setChartData(reactions);
+
+                                dbCtrl.addPosts(listContent,reactions);
 
 //                                ListView listView = (ListView) findViewById(R.id.postList);
 //                                listView.setDividerHeight(50);

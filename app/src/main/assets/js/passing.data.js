@@ -26,7 +26,10 @@ function addPost(post,chartData, index) {
     }
     if(post.type) {
         if(post.type == 'video') {
-            element +='<div class="fb-video" data-href="' + post.permalink_url + '" data-allowfullscreen="true" data-width="500"></div>';
+            if(post.full_picture) {
+                element +='<img class="card-img-top" src="' + post.full_picture + '" alt="Card image cap">';
+            }
+            // element +='<div class="fb-video" data-href="' + post.permalink_url + '" data-allowfullscreen="true" data-width="500"></div>';
         } else {
             if(post.full_picture) {
                 element +='<img class="card-img-top" src="' + post.full_picture + '" alt="Card image cap">';
@@ -48,7 +51,7 @@ function addPost(post,chartData, index) {
 
     element += 
             '<div id="postControl">' +
-                '<a id="flip-btn'+ index +'" class="ripple control-btn" onclick="postHide('+index+')">' +
+                '<a id="flip-btn'+ index +'" class="ripple control-btn" onclick="postHide('+index+', false)">' +
                     '<i class="fas fa-exchange-alt"></i>' +
                 '</a>' +
                 '<a class="ripple control-btn" onclick="getChartImage('+index+')">' +
@@ -68,7 +71,7 @@ function addPost(post,chartData, index) {
     var postChart = prepareChart(chartData, index);
     
     chartsObj.push(postChart);
-    postHide(index);
+    postHide(index, true);
 }
 
 function prepareChart(chartData, index) {
@@ -326,18 +329,27 @@ function loadData(){
 }
 
 //JQUERY
-function postHide(i) {
-    
-    if($('#chart'+i)[0].style.display == "none") {
-        $('#post'+i).hide('blind', 500);
-        setTimeout(function() {
-            $('#chart'+i).show('blind', 500);
-        }, 500);
+function postHide(i, start) {
+    if(start) {
+        if($('#chart'+i)[0].style.display == "none") {
+            $('#post'+i).hide();
+            $('#chart'+i).show();
+        } else {
+            $('#chart'+i).hide();
+            $('#post'+i).show();
+        }
     } else {
-        $('#chart'+i).hide('blind', 500);
-        setTimeout(function() {
-            $('#post'+i).show('blind', 500);
-        }, 500);
+        if($('#chart'+i)[0].style.display == "none") {
+            $('#post'+i).hide('clip', 200);
+            setTimeout(function() {
+                $('#chart'+i).show('slide', 100);
+            }, 200);
+        } else {
+            $('#chart'+i).hide('clip', 200);
+            setTimeout(function() {
+                $('#post'+i).show('slide', 100);
+            }, 200);
+        }
     }
 }
 
