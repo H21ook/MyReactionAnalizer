@@ -1,7 +1,6 @@
 package com.example.myreactionanalizer;
 
 import android.content.Context;
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
@@ -18,7 +17,6 @@ public class WebAppInterface {
     @JavascriptInterface
     public int checkLoadedData() {
         if(this.postData != null && this.postData.size() > 0 && this.chartData != null && this.chartData.size() > 0) {
-            Log.d("CHART", chartData.get(1).toString());
             return 1;
         }
         else
@@ -34,8 +32,8 @@ public class WebAppInterface {
                 result += postData.get(i).toString();
             else
                 result += postData.get(i).toString() + ",";
-
         }
+
         result += "]";
         return result;
     }
@@ -75,8 +73,8 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public String getFbId() {
-        return mContext.getResources().getString(R.string.facebook_app_id);
+    public boolean refresh() {
+        return true;
     }
 
 }

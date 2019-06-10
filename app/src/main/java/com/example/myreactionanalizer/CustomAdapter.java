@@ -60,12 +60,12 @@ public class CustomAdapter extends BaseAdapter  {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View item = convertView;
-        PostViewHolder holder;
+        FindViewHolder holder;
 
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(context.LAYOUT_INFLATER_SERVICE);
         item = inflater.inflate(R.layout.post_list_view , null);
 
-        holder = new PostViewHolder();
+        holder = new FindViewHolder();
         TextView postMessage = (TextView) item.findViewById(R.id.postMessage);
         TextView postDomain = (TextView) item.findViewById(R.id.postDomain);
         TextView postName = (TextView) item.findViewById(R.id.postName);

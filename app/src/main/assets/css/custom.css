@@ -51,3 +51,10 @@
 #postControl {
     text-align: center;
 }
+
+.checked {
+  color: orange;
+}
+.unchecked {
+  color: #dddddd;
+}

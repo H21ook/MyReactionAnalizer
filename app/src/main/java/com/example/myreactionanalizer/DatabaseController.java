@@ -3,9 +3,7 @@ package com.example.myreactionanalizer;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.google.android.gms.common.util.ArrayUtils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.annotations.Nullable;
@@ -17,18 +15,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.gson.JsonArray;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.FieldPosition;
-import java.text.ParsePosition;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,17 +29,28 @@ public class DatabaseController {
     public static String TAG = "MY LOG";
     private Context mContext;
     private FirebaseFirestore db;
+    private String userID;
+
     private ArrayList<JSONObject> myposts = new ArrayList<JSONObject>();
     private CollectionReference postsCol;
 
-    public DatabaseController(Context context) {
+    private CollectionReference notifCol;
+    private JSONObject notif;
+
+    private CollectionReference notifDataCol;
+    private ArrayList<JSONObject> notifDatas = new ArrayList<JSONObject>();
+
+    public DatabaseController(Context context, String userID) {
         this.mContext = context;
+        this.userID = userID;
         init();
     }
 
     public void init() {
         db = FirebaseFirestore.getInstance();
         postsCol = db.collection("posts");
+        notifCol = db.collection("notifications");
+        notifDataCol = db.collection("notificationData");
     }
 
     //add update
@@ -58,6 +60,7 @@ public class DatabaseController {
 
         android.text.format.DateFormat df = new android.text.format.DateFormat();
         String todayDate = String.valueOf(df.format("yyyy-MM-dd", new Date()));
+        String key = userID + todayDate;
         String todayTime = "";
 
 
@@ -118,7 +121,7 @@ public class DatabaseController {
             }
         }
 
-        postsCol.document(todayDate).set(dayData);
+        postsCol.document(key).set(dayData);
     }
 
     //read all day post data
@@ -130,9 +133,15 @@ public class DatabaseController {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.d(TAG, document.getId() + " => " + document.getData());
-                                myposts.add(new JSONObject(document.getData()));
-                                Log.d(TAG, document.getId() + " => " + document.getData());
+                                Log.d(TAG+"1", document.getId().substring(0, document.getId().length() - 10));
+                                Log.d(TAG+"1", userID);
+                                if(document.getId() != null) {
+                                    if (document.getId().substring(0, document.getId().length() - 10).equalsIgnoreCase(userID) == true) {
+                                        Log.d(TAG, document.getId() + " => " + document.getData());
+                                        myposts.add(new JSONObject(document.getData()));
+                                        Log.d(TAG, new JSONObject(document.getData()).toString());
+                                    }
+                                }
                             }
                         } else {
                             Log.w(TAG, "Error getting documents.", task.getException());
@@ -143,7 +152,7 @@ public class DatabaseController {
 
     //read one day post data
     public void readPosts(String date) {
-        final DocumentReference docRef = db.collection("posts").document(date);
+        final DocumentReference docRef = db.collection("posts").document(userID+""+date);
         docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot snapshot,
@@ -171,6 +180,67 @@ public class DatabaseController {
 
                 } else {
                     Log.d(TAG, "Current data: null");
+                }
+            }
+        });
+    }
+
+    //notification add
+    public void addNotification(ArrayList<JSONObject> posts) {
+        android.text.format.DateFormat df = new android.text.format.DateFormat();
+        String todayDate = String.valueOf(df.format("yyyy-MM-dd", new Date()));
+        String todayTime = String.valueOf(df.format("yyyy-MM-dd, HH:mm:ss", new Date()));
+        String notifDataID = "";
+        Map<String, Object> notifications = new HashMap<>();
+        notifications.put("timestamp", todayTime);
+        notifications.put("notifDataID", notifDataID);
+        notifCol.document(todayDate).set(notifications);
+    }
+
+    public void readNotification(String date) {
+        final DocumentReference docRef = db.collection("notifications").document(date);
+        docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot snapshot,
+                                @Nullable FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.w(TAG, "Listen failed.", e);
+                    return;
+                }
+
+                if (snapshot != null && snapshot.exists()) {
+                    notif = new JSONObject(snapshot.getData());
+                } else {
+                    Log.d(TAG, "Current data: null");
+                }
+            }
+        });
+    }
+
+    //notificationData add
+    public void addNotificationData(String title, String message, String status) {
+
+        Map<String, Object> notificationData = new HashMap<>();
+        notificationData.put("title", title);
+        notificationData.put("message", message);
+        notificationData.put("status", status);
+        notifDataCol.document().set(notificationData);
+    }
+
+    public void readNotificationDatas() {
+        db.collection("notificationData")
+        .get()
+        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Log.d(TAG, document.getId() + " => " + document.getData());
+                        notifDatas.add(new JSONObject(document.getData()));
+                        Log.d(TAG, document.getId() + " => " + document.getData());
+                    }
+                } else {
+                    Log.w(TAG, "Error getting documents.", task.getException());
                 }
             }
         });

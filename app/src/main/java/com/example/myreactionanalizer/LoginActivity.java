@@ -35,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     private CallbackManager callbackManager;
     private AccessTokenTracker accessTokenTracker;
     private ProfileTracker profileTracker;
+    private AccessToken accessToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +46,7 @@ public class LoginActivity extends AppCompatActivity {
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(AccessToken oldToken, AccessToken newToken) {
+                accessToken = newToken;
             }
         };
 
@@ -59,9 +61,13 @@ public class LoginActivity extends AppCompatActivity {
         profileTracker.startTracking();
 
         LoginButton loginButton = (LoginButton)findViewById(R.id.login_button);
-        FacebookCallback<LoginResult> callback = new FacebookCallback<LoginResult>() {
+        loginButton.setReadPermissions(Arrays.asList(EMAIL, PUBLIC_PROFILE, USER_AGE_RANGE, USER_LINK,
+                USER_PHOTOS,USER_FRIENDS, USER_POSTS, USER_HOMETOWN, USER_LIKES, USER_GENDER, USER_STATUS, USER_VIDEOS));
+        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
+                accessToken = loginResult.getAccessToken();
+
                 Profile profile = Profile.getCurrentProfile();
                 nextActivity(profile);
                 Toast.makeText(getApplicationContext(), "Logging in...", Toast.LENGTH_SHORT).show();
@@ -74,10 +80,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onError(FacebookException e) {
             }
-        };
-        loginButton.setReadPermissions(Arrays.asList(EMAIL, PUBLIC_PROFILE, USER_AGE_RANGE, USER_LINK,
-                USER_PHOTOS,USER_FRIENDS, USER_POSTS, USER_HOMETOWN, USER_LIKES, USER_GENDER, USER_STATUS, USER_VIDEOS));
-        loginButton.registerCallback(callbackManager, callback);
+        });
     }
 
     @Override
@@ -112,8 +115,34 @@ public class LoginActivity extends AppCompatActivity {
             main.putExtra("userFirstName", profile.getFirstName());
             main.putExtra("userLastName", profile.getLastName());
             main.putExtra("userID", profile.getId());
-            main.putExtra("userImg", profile.getProfilePictureUri(200,200).toString());
             startActivity(main);
+//            GraphRequest request = GraphRequest.newMeRequest(accessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+//                //OnCompleted is invoked once the GraphRequest is successful
+//                @Override
+//                public void onCompleted(JSONObject object, GraphResponse response) {
+//                    try {
+//                        Intent main = new Intent(LoginActivity.this, MainActivity.class);
+//                        main.putExtra("userFirstName", object.getString("first_name"));
+//                        main.putExtra("userLastName", object.getString("last_name"));
+//                        main.putExtra("userAge", object.getJSONObject("age_range").getString("min"));
+//                        main.putExtra("userGender", object.getString("gender"));
+//                        main.putExtra("userID", object.getString("id"));
+//                        main.putExtra("userImg", object.getJSONObject("picture").getJSONObject("data").getString("url").toString());
+//                        main.putExtra("userBirthDay", object.getString("birthday").toString());
+//                        startActivity(main);
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            });
+//            // We set parameters to the GraphRequest using a Bundle.
+//            Bundle parameters = new Bundle();
+//            parameters.putString("fields", "id,name,email,picture.height(200),age_range,birthday,gender,first_name,last_name");
+//            request.setParameters(parameters);
+//            // Initiate the GraphRequest
+//            request.executeAsync();
+
+
         }
     }
 }

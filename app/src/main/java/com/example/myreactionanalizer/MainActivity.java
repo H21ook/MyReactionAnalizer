@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ArrayList<JSONObject> reactions = new ArrayList<>();
     private CustomAdapter postCustomAdapter = new CustomAdapter(this);
     private WebAppInterface webAppInterface;
+    private String userID;
     private DatabaseController dbCtrl;
     private  android.text.format.DateFormat df;
 
@@ -61,23 +62,60 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         View navHeaderView = navigationView.getHeaderView(0);
         navigationView.setNavigationItemSelectedListener(this);
 
-        TextView userName = (TextView) navHeaderView.findViewById(R.id.userName);
-        CircleImageView userImg = (CircleImageView) navHeaderView.findViewById((R.id.userImg));
+        TextView firstName = (TextView) navHeaderView.findViewById(R.id.firstName);
+        final TextView age = (TextView) navHeaderView.findViewById(R.id.age);
+        final TextView gender = (TextView) navHeaderView.findViewById(R.id.gender);
+        final TextView birthDay = (TextView) navHeaderView.findViewById(R.id.birthDay);
+        final CircleImageView userImg = (CircleImageView) navHeaderView.findViewById((R.id.userImg));
 
         Bundle bundle = getIntent().getExtras();
 
-        String firstName = bundle.getString("userFirstName");
-        String lastName = bundle.getString("userLastName");
-        userName.setText(firstName + " " + lastName);
-        Picasso.get()
-                .load(bundle.getString("userImg"))
-                .into(userImg);
+        firstName.setText(bundle.getString("userLastName") +" "+ bundle.getString("userFirstName"));
+
+        userID = bundle.getString("userID");
+
+
+        GraphRequest request = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+            //OnCompleted is invoked once the GraphRequest is successful
+            @Override
+            public void onCompleted(JSONObject object, GraphResponse response) {
+                try {
+                    Picasso.get()
+                            .load(object.getJSONObject("picture").getJSONObject("data").getString("url").toString())
+                            .into(userImg);
+                    if(!object.getJSONObject("age_range").getString("min").isEmpty()) {
+                        age.setText(object.getJSONObject("age_range").getString("min"));
+                    }
+                    if(!object.getString("gender").isEmpty()) {
+                        if (object.getString("gender").equalsIgnoreCase("male") == true) {
+                            gender.setText("Эр");
+                        } else {
+                            gender.setText("Эм");
+                        }
+                    }
+                    if(!object.getString("birthday").isEmpty()) {
+                        birthDay.setText(object.getString("birthday"));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        // We set parameters to the GraphRequest using a Bundle.
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "id,name,email,picture.height(200),age_range,birthday,gender,first_name,last_name");
+        request.setParameters(parameters);
+        // Initiate the GraphRequest
+        request.executeAsync();
 
         Button refreshBtn = (Button) findViewById(R.id.refBtn);
         refreshBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                refresh();
+                finish();
+                overridePendingTransition( 0, 0);
+                startActivity(getIntent());
+                overridePendingTransition( 0, 0);
             }
         });
         //WebAppInterface
@@ -93,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webView.setWebChromeClient(new CustomWebChromeClient());
         //WebAppInterface
 
-        dbCtrl = new DatabaseController(MainActivity.this);
+        dbCtrl = new DatabaseController(MainActivity.this, userID);
 
         df = new android.text.format.DateFormat();
         dbCtrl.readPosts(String.valueOf(df.format("yyyy-MM-dd", new Date())));
@@ -138,6 +176,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent login = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(login);
             finish();
+        } else if(id == R.id.nav_find) {
+            Intent find = new Intent(MainActivity.this, FindActivity.class);
+            startActivity(find);
+            finish();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -177,9 +219,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
                                 webAppInterface.setPostData(listContent);
                                 webAppInterface.setChartData(reactions);
-
+                                dbCtrl.readAllDayPosts();
                                 dbCtrl.addAndUpdatePosts(listContent,reactions);
-
 //                                ListView listView = (ListView) findViewById(R.id.postList);
 //                                listView.setDividerHeight(50);
 //                                postCustomAdapter.setContent(listContent);
@@ -197,14 +238,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         cal.add(Calendar.DATE, -30);
-        String tTime = cal.get(Calendar.YEAR)+ "-" + cal.get(Calendar.YEAR) + ""s
 
-        parameters.putString("fields", "posts.as(like).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LIKE).limit(0).summary(true)}," +
-                "posts.as(love).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LOVE).limit(0).summary(true)}," +
-                "posts.as(wow).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(WOW).limit(0).summary(true)}," +
-                "posts.as(haha).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(HAHA).limit(0).summary(true)}," +
-                "posts.as(sad).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(SAD).limit(0).summary(true)}," +
-                "posts.as(angry).since("+String.valueOf(df.format("yyyy-MM-dd", new Date()))+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(ANGRY).limit(0).summary(true)}");
+        String tTime = ""+cal.get(Calendar.YEAR);
+
+        if(cal.get(Calendar.MONTH) + 1 < 10)
+            tTime += "-0" + (cal.get(Calendar.MONTH) + 1);
+        else
+            tTime += "-" + (cal.get(Calendar.MONTH) + 1);
+
+        if(cal.get(Calendar.DAY_OF_MONTH) < 10)
+            tTime += "-0" + cal.get(Calendar.DAY_OF_MONTH);
+        else
+            tTime += "-" + cal.get(Calendar.DAY_OF_MONTH);
+
+        parameters.putString("fields", "posts.as(like).since("+tTime+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LIKE).limit(0).summary(true)}," +
+                "posts.as(love).since("+tTime+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(LOVE).limit(0).summary(true)}," +
+                "posts.as(wow).since("+tTime+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(WOW).limit(0).summary(true)}," +
+                "posts.as(haha).since("+tTime+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(HAHA).limit(0).summary(true)}," +
+                "posts.as(sad).since("+tTime+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(SAD).limit(0).summary(true)}," +
+                "posts.as(angry).since("+tTime+").limit(100){description,permalink_url,type,message,source,created_time,name,attachments{description,media_type,media,url},picture,caption,from,full_picture,reactions.type(ANGRY).limit(0).summary(true)}");
+        request.setParameters(parameters);
+        request.executeAsync();
+    }
+
+    public void test() {
+
+        GraphRequest request = GraphRequest.newMeRequest(
+                AccessToken.getCurrentAccessToken(),
+                new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        //handle the result\
+                        try {
+                            Log.d("MYLOG", object.toString());
+                        } catch(Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "/feed");
         request.setParameters(parameters);
         request.executeAsync();
     }

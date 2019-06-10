@@ -51,11 +51,13 @@ function addPost(post,chartData, index) {
 
     element += 
             '<div id="postControl">' +
+                '<span id="r1'+index+'" class="fa fa-star unchecked" onclick="changeRate(1,'+index+')"></span>'+
+               '<span id="r2'+index+'" class="fa fa-star unchecked" onclick="changeRate(2,'+index+')"></span>'+
+               '<span id="r3'+index+'" class="fa fa-star unchecked" onclick="changeRate(3,'+index+')"></span>'+
+               '<span id="r4'+index+'" class="fa fa-star unchecked" onclick="changeRate(4,'+index+')"></span>'+
+               '<span id="r5'+index+'" class="fa fa-star unchecked" onclick="changeRate(5,'+index+')"></span>'+
                 '<a id="flip-btn'+ index +'" class="ripple control-btn" onclick="postHide('+index+', false)">' +
                     '<i class="fas fa-exchange-alt"></i>' +
-                '</a>' +
-                '<a class="ripple control-btn" onclick="getChartImage('+index+')">' +
-                    '<i class="fas fa-download"></i>' +
                 '</a>' +
             '</div>';
 
@@ -340,16 +342,29 @@ function postHide(i, start) {
         }
     } else {
         if($('#chart'+i)[0].style.display == "none") {
-            $('#post'+i).hide('clip', 200);
+            $('#post'+i).hide('clip', 500);
             setTimeout(function() {
-                $('#chart'+i).show('slide', 100);
+                $('#chart'+i).show('clip', 500);
             }, 200);
         } else {
-            $('#chart'+i).hide('clip', 200);
+            $('#chart'+i).hide('clip', 500);
             setTimeout(function() {
-                $('#post'+i).show('slide', 100);
+                $('#post'+i).show('clip', 500);
             }, 200);
         }
+    }
+}
+
+
+function changeRate(i, l) {
+    for(var j = 1; j <= 5; j++) {
+        $('#r'+j+l).removeClass("checked");
+        $('#r'+j+l).addClass("unchecked");
+        if(j<=i) {
+            $('#r'+j+l).removeClass("unchecked");
+            $('#r'+j+l).addClass("checked");
+        }
+
     }
 }
 
